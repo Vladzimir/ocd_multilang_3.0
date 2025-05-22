@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+    <name>OCDEV.pro - Multilanguage Hreflang Opencart 3.x</name>
+    <code>ocdevpro_multilang_code</code>
+    <version>1.1.4</version>
+    <author>alexwaha</author>
+    <link>https://ocdev.pro</link>
+    <file path="catalog/controller/common/header.php">
+        <operation>
+            <search><![CDATA[$data['language'] = $this->load->controller('common/language');]]></search>
+            <add position="before"><![CDATA[$data['hreflang'] = $this->load->controller('extension/module/ocd_hreflang');]]></add>
+        </operation>
+    </file>
+    <file path="catalog/view/theme/*/template/common/header.twig">
+        <operation>
+            <search><![CDATA[{% for link in links %}]]></search>
+            <add position="before"><![CDATA[{% for lang in hreflang %}
+            <link rel="{{ lang.rel }}" hreflang="{{ lang.code }}" href="{{ lang.href }}" />
+            {% endfor %}
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/controller/extension/feed/google_sitemap.php">
+        <operation>
+            <search><![CDATA[if ($this->config->get('feed_google_sitemap_status')) {]]></search>
+            <add position="after"><![CDATA[
+            if(isset($this->request->get['lang_code']) && $this->request->get['lang_code']) {
+                $this->load->model('extension/module/ocd_hreflang');
+
+                $session_language_id = $this->model_extension_module_ocd_hreflang->getLanguageByCode($this->request->get['lang_code']);
+
+                if ($session_language_id) {
+                    $this->config->set('config_language_id', $session_language_id);
+                }
+            }
+            ]]></add>
+        </operation>
+    </file>
+    <file path="catalog/controller/information/contact.php">
+        <operation>
+            <search><![CDATA[$data['store'] = $this->config->get('config_name');]]></search>
+            <add position="after"><![CDATA[
+            $language_id = $this->config->get('config_language_id');
+
+            $ocd_hreflang_data = $this->config->get('ocd_hreflang_data');
+
+            if (isset($ocd_hreflang_data[$language_id]['address'])) {
+                $address = $ocd_hreflang_data[$language_id]['address'];
+            }
+
+            $ocd_address = $address ? $address : $this->config->get('config_address');
+            ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[nl2br($this->config->get('config_address'));]]></search>
+            <add position="replace"><![CDATA[nl2br($ocd_address);]]></add>
+        </operation>
+    </file>
+    <file path="catalog/controller/common/home.php">
+        <operation>
+            <search><![CDATA[$this->config->get('config_meta_title')]]></search>
+            <add position="replace"><![CDATA[$ocd_meta_title]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[$this->config->get('config_meta_description')]]></search>
+            <add position="replace"><![CDATA[$ocd_meta_description]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[$this->config->get('config_meta_keyword')]]></search>
+            <add position="replace"><![CDATA[$ocd_meta_keyword]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[public function index() {]]></search>
+            <add position="after"><![CDATA[
+            $language_id = $this->config->get('config_language_id');
+
+            $ocd_hreflang_data = $this->config->get('ocd_hreflang_data');
+
+            $ocd_meta_title = $this->config->get('config_meta_title');
+            $ocd_meta_description = $this->config->get('config_meta_description');
+            $ocd_meta_keyword = $this->config->get('config_meta_keyword');
+
+            if (isset($ocd_hreflang_data[$language_id])) {
+                if($ocd_hreflang_data[$language_id]['meta_title']) {
+                    $ocd_meta_title = $ocd_hreflang_data[$language_id]['meta_title'];
+                }
+                if($ocd_hreflang_data[$language_id]['meta_description']) {
+                    $ocd_meta_description = $ocd_hreflang_data[$language_id]['meta_description'];
+                }
+                if($ocd_hreflang_data[$language_id]['meta_keyword']) {
+                    $ocd_meta_keyword = $ocd_hreflang_data[$language_id]['meta_keyword'];
+                }
+            }
+            ]]></add>
+        </operation>
+    </file>
+</modification>
